@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"log"
+	"os"
+	"os/signal"
 	"syscall"
 )
 
@@ -19,6 +21,10 @@ func main() {
 		}
 		fmt.Println("socket", fd, "is closed.")
 	}()
+
+	// 1-1. Create a channel to receive OS Signals
+	ch := make(chan os.Signal, 1)
+	go handleSignal(fd, ch)
 
 	// 2. Create a SockaddrInet4 structure to specify server address and port
 	sockAddr := &syscall.SockaddrInet4{Port: 8080}
@@ -85,4 +91,19 @@ func handleConnection(fd int, sockAddr *syscall.SockaddrInet4) {
 			log.Fatalln("Error in syscall.Write:", err)
 		}
 	}
+}
+
+func handleSignal(fd int, ch chan os.Signal) {
+	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM) // Notify SIGINT and SIGTERM signals
+
+	sig := <-ch
+	fmt.Println("\nReceived signal:", sig)
+
+	err := syscall.Close(fd)
+	if err != nil {
+		log.Fatalln("Error in syscall.Close:", err)
+	}
+
+	fmt.Println("socket", fd, "is closed.")
+	os.Exit(0)
 }
