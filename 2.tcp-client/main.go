@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"log"
+	"os"
 	"syscall"
 )
 
@@ -31,10 +33,16 @@ func main() {
 
 	// 4. Prompt user for input
 	fmt.Print("Enter message: ")
+
+	// 공백 허용을 위해 Scanner 사용
+	scanner := bufio.NewScanner(os.Stdin)
+
 	var message string
-	_, err = fmt.Scanln(&message)
-	if err != nil {
-		log.Fatalln("Error in fmt.Scanln", err)
+
+	if scanner.Scan() {
+		message = scanner.Text()
+	} else {
+		log.Fatalln("Nothing to scan")
 	}
 
 	// 5. Send message to server
